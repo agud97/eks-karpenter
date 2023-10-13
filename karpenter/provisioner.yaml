@@ -14,8 +14,8 @@ spec:
       values: [nano, micro, small, medium, large]
   limits:
     resources:
-      cpu: 1000
-      memory: 1000Gi
+      cpu: 10000
+      memory: 10000Gi
   ttlSecondsAfterEmpty: 30
   ttlSecondsUntilExpired: 2592000
   providerRef:
