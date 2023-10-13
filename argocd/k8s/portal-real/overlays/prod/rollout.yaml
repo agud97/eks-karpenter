@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: front-bluegreen
+spec:
+  replicas: 1 
+  revisionHistoryLimit: 0 
+  selector:
+    matchLabels:
+      app: front 
+  workloadRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: front
+  strategy:
+    blueGreen:
+      activeService: frontend
+      previewService: frontend-preview
+      autoPromotionEnabled: false
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: back-bluegreen
+spec:
+  replicas: 1
+  revisionHistoryLimit: 0 
+  selector:
+    matchLabels:
+      app: back 
+  workloadRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: back
+  strategy:
+    blueGreen:
+      activeService: backend 
+      previewService: backend-preview
+      autoPromotionEnabled: false

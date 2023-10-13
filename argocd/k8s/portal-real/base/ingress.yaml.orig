@@ -1,0 +1,79 @@
+---
+apiVersion: networking.k8s.io/v1 
+kind: Ingress 
+metadata:
+  name: frontend-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx 
+    kubernetes.io/ingress.provider: nginx
+    ingress.kubernetes.io/ssl-redirect: true
+    # cert-manager.io/issuer: "letsencrypt-front"
+    acme.cert-manager.io/http01-edit-in-place: "true"
+    # cert-manager.io/issue-temporary-certificate: "true"
+    # nginx.org/server-snippets: |
+    #     location /.well-known/acme-challenge/4ZskqYiiCO2hQeNJZghLaRHis9MYErx6xeHs67zUFX0 {
+    #       return 200 '4ZskqYiiCO2hQeNJZghLaRHis9MYErx6xeHs67zUFX0.TK-sxESy5_3cSrEJvS3nYM7gMwHN80_LBvhok79EeZs';
+    #     }
+spec:
+  tls:
+  - hosts:
+    - pink.nexthop.com.au
+    # - www.pink.nexthop.com.au
+    secretName: pink-nexthop-com-au-tls
+  rules:
+  - host: pink.nexthop.com.au 
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 8080
+---
+apiVersion: networking.k8s.io/v1 
+kind: Ingress 
+metadata:
+  name: backend-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx 
+    kubernetes.io/ingress.provider: nginx
+    ingress.kubernetes.io/ssl-redirect: true
+#    cert-manager.io/issuer: "letsencrypt-back"
+    acme.cert-manager.io/http01-edit-in-place: "true"
+    # cert-manager.io/issue-temporary-certificate: "true"
+    # nginx.org/server-snippets: |
+    #     location /.well-known/acme-challenge/2gIPdRImVTGBQcDVCo4z4oxmT2FLOhMBKV6kWJMgkY0 {
+    #       return 200 '2gIPdRImVTGBQcDVCo4z4oxmT2FLOhMBKV6kWJMgkY0.TK-sxESy5_3cSrEJvS3nYM7gMwHN80_LBvhok79EeZs';
+    #     }
+spec:
+  tls:
+  - hosts:
+    - api.pink.nexthop.com.au
+    secretName: api-pink-nexthop-com-au-tls
+  rules:
+  - host: api.pink.nexthop.com.au
+    http:
+      paths:
+#      - path: /sign-in
+#        pathType: Prefix
+#        backend:
+#          service:
+#            name: backend
+#            port:
+#              number: 8002
+#      - path: /account
+#        pathType: Prefix
+#        backend:
+#          service:
+#            name: backend
+#            port:
+#              number: 8002
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: backend
+            port:
+              number: 8002

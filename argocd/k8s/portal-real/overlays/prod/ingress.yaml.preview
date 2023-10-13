@@ -1,0 +1,40 @@
+---
+apiVersion: networking.k8s.io/v1 
+kind: Ingress 
+metadata:
+  name: frontend-ingress-preview
+  annotations:
+    kubernetes.io/ingress.class: nginx 
+    kubernetes.io/ingress.provider: nginx
+spec:
+  rules:
+  - host: preview-pink.nexthop.com.au 
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-preview
+            port:
+              number: 8080
+---
+apiVersion: networking.k8s.io/v1 
+kind: Ingress 
+metadata:
+  name: backend-ingress-prevew
+  annotations:
+    kubernetes.io/ingress.class: nginx 
+    kubernetes.io/ingress.provider: nginx
+spec:
+  rules:
+  - host: preview-api.pink.nexthop.com.au
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: backend-preview
+            port:
+              number: 8002

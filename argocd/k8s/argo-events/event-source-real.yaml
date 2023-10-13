@@ -1,0 +1,138 @@
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: evsource-back 
+spec:
+  service:
+    ports:
+    - port: 14000
+      targetPort: 14000
+      name: back1
+    - port: 14001
+      targetPort: 14001
+      name: back2
+  github:
+    portal_backend:
+      owner: nxhop 
+      repository: portal_backend 
+      webhook:
+        endpoint: /portal_backend
+        port: "14000"
+        method: POST
+        url: http://a156cce4dba494266a47e8a7c2d002d2-1095449798.ap-southeast-2.elb.amazonaws.com/portal_backend
+      events:
+        - "*"
+      apiToken:
+        name: github-access
+        key: token
+      insecure: true
+      active: true
+      contentType: json
+    pink_api:
+      owner: nxhop 
+      repository: pink_api 
+      webhook:
+        endpoint: /pink_api
+        port: "14001"
+        method: POST
+        url: http://a156cce4dba494266a47e8a7c2d002d2-1095449798.ap-southeast-2.elb.amazonaws.com/portal_backend
+      events:
+        - "*"
+      apiToken:
+        name: github-access
+        key: token
+      insecure: true
+      active: true
+      contentType: json
+        
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: evsource-front
+spec:
+  service:
+    ports:
+    - port: 15000
+      targetPort: 15000
+      name: vue3
+    - port: 15001
+      targetPort: 15001
+      name: apifrontend
+  github:
+    portal_frontend_vue3:
+      owner: nxhop 
+      repository: portal_frontend_vue3 
+      webhook:
+        endpoint: /portal_frontend_vue3
+        port: "15000"
+        method: POST
+        url: http://a156cce4dba494266a47e8a7c2d002d2-1095449798.ap-southeast-2.elb.amazonaws.com/portal_frontend_vue3
+      events:
+        - "*"
+      apiToken:
+        name: github-access
+        key: token
+      insecure: true
+      active: true
+    portal_frontendapi:
+      owner: nxhop 
+      repository: pink_api_frontend 
+      webhook:
+        endpoint: /pink_api_frontend
+        port: "15001"
+        method: POST
+        url: http://a156cce4dba494266a47e8a7c2d002d2-1095449798.ap-southeast-2.elb.amazonaws.com/pink_api_frontend
+      events:
+        - "*"
+      apiToken:
+        name: github-access
+        key: token
+      insecure: true
+      active: true
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: github
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+  - host: a156cce4dba494266a47e8a7c2d002d2-1095449798.ap-southeast-2.elb.amazonaws.com
+    http:
+      paths:
+      - path: /portal_backend
+        pathType: Prefix
+        backend:
+          service:
+           name: evsource-back-eventsource-svc
+           port:
+             number: 14000
+      - path: /pink_api
+        pathType: Prefix
+        backend:
+          service:
+           name: evsource-back-eventsource-svc
+           port:
+             number: 14001
+      - path: /portal_frontend_vue3
+        pathType: Prefix
+        backend:
+          service:
+           name: evsource-front-eventsource-svc 
+           port:
+             number: 15000
+      - path: /pink_api_frontend
+        pathType: Prefix
+        backend:
+          service:
+           name: evsource-front-eventsource-svc 
+           port:
+             number: 15001

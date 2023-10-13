@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inflate-prod
+spec:
+  replicas: 2 
+  selector:
+    matchLabels:
+      app: prod-karpenter
+  template:
+    metadata:
+      labels:
+        app: prod-karpenter
+    spec:
+      containers:
+        - name: inflate-prod
+          image: public.ecr.aws/eks-distro/kubernetes/pause:3.2
+      tolerations:
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoExecute"

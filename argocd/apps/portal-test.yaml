@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: portal-test 
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: nxhop 
+  source:
+    path: k8s/portal-real/overlays/test
+    repoURL: https://github.com/agud97/eks-karpenter 
+    targetRevision: HEAD
+  destination:
+    namespace: test
+    server: https://kubernetes.default.svc 
+  syncPolicy:
+#    automated:
+#      selfHeal: true
+#      prune: true
+    syncOptions:
+    - CreateNamespace=true

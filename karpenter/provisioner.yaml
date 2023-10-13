@@ -1,0 +1,36 @@
+apiVersion: karpenter.sh/v1alpha5
+kind: Provisioner
+metadata:
+  name: default
+spec:
+  labels:
+    node-class: common
+  requirements:
+    - key: karpenter.sh/capacity-type
+      operator: In
+      values: ["spot"]
+    - key: karpenter.k8s.aws/instance-size
+      operator: In
+      values: [nano, micro, small, medium, large]
+  limits:
+    resources:
+      cpu: 1000
+      memory: 1000Gi
+  ttlSecondsAfterEmpty: 30
+  ttlSecondsUntilExpired: 2592000
+  providerRef:
+    name: default
+---
+apiVersion: karpenter.k8s.aws/v1alpha1
+kind: AWSNodeTemplate
+metadata:
+  name: default
+spec:
+  subnetSelector:
+    aws-ids: "subnet-0d36d85f112e32acd, subnet-009789339291c271d, subnet-0daca39044bdd3388"
+  securityGroupSelector:
+    aws-ids: "sg-00cc0a8457412eb7b, sg-09858661833118331"
+  tags:
+    KarpenerProvisionerName: "default"
+    NodeType: "karpenter"
+    node-class: "common"

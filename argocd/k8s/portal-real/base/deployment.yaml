@@ -1,0 +1,179 @@
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: front 
+spec:
+  selector:
+    matchLabels:
+      app: front 
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: front
+    spec:
+      containers:
+      - name: frontend
+        resources:
+          requests:            
+            memory: "128Mi"
+            cpu: "250m"
+          limits:
+            memory: "256Mi"    
+            cpu: "500m"
+        securityContext:
+          allowPrivilegeEscalation: false
+        image: nxhop/portal_frontend_vue3
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 8080
+        env:
+          - name: VUE_APP_API_BASE_URL 
+            valueFrom:
+              secretKeyRef:
+                name: app-creds
+                key: VUE_APP_API_BASE_URL 
+      restartPolicy: Always
+      imagePullSecrets:
+      - name: regcred
+---
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: back
+spec:
+  selector:
+    matchLabels:
+      app: back
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: back
+    spec:
+      containers:
+      - name: backend 
+        resources:
+          requests:            
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"    
+            cpu: "500m"
+        securityContext:
+          allowPrivilegeEscalation: false
+        image: nxhop/portal_backend 
+        command: ["/bin/bash", "-c", "uvicorn app.main:app --reload --workers 1 --host 0.0.0.0 --port 8002"]
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 8002
+        livenessProbe:
+          httpGet:
+            path: /service-status/f9a607a40897b9743e780f14f64e4410cb68c3fb0ccc5367770cc994736b3527/ 
+            port: 8002
+          failureThreshold: 2
+          periodSeconds: 30
+          timeoutSeconds: 5
+        env:
+          - name: ALLOWED_HOSTS 
+            value: "https://apitest-pink.nexthop.com.au,https://api.pink.nexthop.com.au,http://preview-api.pink.nexthop.com.au" 
+          - name: CORS_DOMAINS 
+            value: "https://test-pink.nexthop.com.au,http://preview-pink.nexthop.com.au,https://pink.nexthop.com.au" 
+          - name: DB_NETWORK_NAME
+            valueFrom:
+              secretKeyRef:
+                name: app-creds
+                key: DB_NETWORK_NAME
+          - name: DB_NETWORK_HOST
+            valueFrom:
+              secretKeyRef:
+                name: app-creds
+                key: DB_NETWORK_HOST
+          - name: DB_NETWORK_USER
+            valueFrom:
+              secretKeyRef:
+                name: app-creds
+                key: DB_NETWORK_USER
+          - name: DB_NETWORK_PASSWD
+            valueFrom:
+              secretKeyRef:
+                name: app-creds
+                key: DB_NETWORK_PASSWD
+          - name: DBW_PORTAL_NAME
+            valueFrom:
+              secretKeyRef:
+                name: app-creds
+                key: DBW_PORTAL_NAME
+          - name: DBW_PORTAL_HOST
+            valueFrom:
+              secretKeyRef:
+                name: app-creds
+                key: DBW_PORTAL_HOST
+          - name: DBW_PORTAL_USER
+            valueFrom:
+              secretKeyRef:
+                name: app-creds
+                key: DBW_PORTAL_USER
+          - name: DBW_PORTAL_PASSWD
+            valueFrom:
+              secretKeyRef:
+                name: app-creds
+                key: DBW_PORTAL_PASSWD
+          - name: DBR_PORTAL_NAME
+            valueFrom:
+              secretKeyRef:
+                name: app-creds
+                key: DBR_PORTAL_NAME
+          - name: DBR_PORTAL_HOST
+            valueFrom:
+              secretKeyRef:
+                name: app-creds
+                key: DBR_PORTAL_HOST
+          - name: DBR_PORTAL_USER
+            valueFrom:
+              secretKeyRef:
+                name: app-creds
+                key: DBR_PORTAL_USER
+          - name: DBR_PORTAL_PASSWD
+            valueFrom:
+              secretKeyRef:
+                name: app-creds
+                key: DBR_PORTAL_PASSWD
+          - name: AWS_S3_BUCKET_NAME
+            valueFrom:
+              secretKeyRef:
+                name: app-creds
+                key: AWS_S3_BUCKET_NAME
+          - name: AWS_S3_REGION
+            valueFrom:
+              secretKeyRef:
+                name: app-creds
+                key: AWS_S3_REGION
+          - name: AWS_S3_USER_KEY
+            valueFrom:
+              secretKeyRef:
+                name: app-creds
+                key: AWS_S3_USER_KEY
+          - name: AWS_S3_USER_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: app-creds
+                key: AWS_S3_USER_SECRET
+          - name: AUTOTASC_INTEGRATION_CODE
+            valueFrom:
+              secretKeyRef:
+                name: app-creds
+                key: AUTOTASC_INTEGRATION_CODE
+          - name: AUTOTASC_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: app-creds
+                key: AUTOTASC_SECRET
+          - name: AUTOTASC_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: app-creds
+                key: AUTOTASC_USERNAME
+      restartPolicy: Always
+      imagePullSecrets:
+      - name: regcred

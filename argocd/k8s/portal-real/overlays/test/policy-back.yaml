@@ -1,0 +1,21 @@
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-egress-external
+  namespace: test 
+spec:
+  podSelector:
+    matchLabels:
+      app: back
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - {} 
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 10.0.201.100/32 
+    - ipBlock:
+        cidr: 10.0.201.25/32
+

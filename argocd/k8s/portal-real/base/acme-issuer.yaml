@@ -1,0 +1,58 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-testfront
+spec:
+  acme:
+    # The ACME server URL
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    # Email address used for ACME registration
+    email: tparfenov@gmail.com
+    # Name of a secret used to store the ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-testfront
+    # Enable the HTTP-01 challenge provider
+    solvers:
+      - http01:
+          ingress:
+            class: nginx
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-front
+  namespace: prod 
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: tparfenov@gmail.com 
+    privateKeySecretRef:
+      name: front-tls-key
+    solvers:
+    - http01:
+        ingress:
+          podTemplate:
+            metadata:
+              labels:
+                app: "front"
+          class: nginx
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-back
+  namespace: prod 
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: tparfenov@gmail.com 
+    privateKeySecretRef:
+      name: back-tls-key
+    solvers:
+    - http01:
+        ingress:
+          podTemplate:
+            metadata:
+              labels:
+                app: "front"
+          class: nginx

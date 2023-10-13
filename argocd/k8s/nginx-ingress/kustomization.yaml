@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- deployments/common/ns-and-sa.yaml
+- deployments/rbac/rbac.yaml
+- deployments/common/default-server-secret.yaml
+- deployments/common/nginx-config.yaml
+- deployments/common/ingress-class.yaml
+- deployments/common/crds/k8s.nginx.org_virtualservers.yaml
+- deployments/common/crds/k8s.nginx.org_virtualserverroutes.yaml
+- deployments/common/crds/k8s.nginx.org_transportservers.yaml
+- deployments/common/crds/k8s.nginx.org_policies.yaml
+- deployments/daemon-set/nginx-ingress.yaml
+- deployments/service/loadbalancer-aws-elb.yaml

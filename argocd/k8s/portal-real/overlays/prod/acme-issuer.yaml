@@ -1,0 +1,38 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-front-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: tparfenov@gmail.com 
+    privateKeySecretRef:
+      name: front1
+    solvers:
+    - http01:
+        ingress:
+          podTemplate:
+            metadata:
+              labels:
+                app: "front"
+          class: nginx
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-back-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: tparfenov@gmail.com 
+    privateKeySecretRef:
+      name: back1
+    solvers:
+    - http01:
+        ingress:
+          podTemplate:
+            metadata:
+              labels:
+                app: "front"
+          class: nginx

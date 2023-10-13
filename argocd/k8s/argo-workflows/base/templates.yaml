@@ -1,0 +1,90 @@
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: container-image
+spec:
+  templates:
+  - name: build-kaniko-git
+    inputs:
+      parameters:
+      - name: repo_url
+      - name: repo_ref
+#        value: refs/heads/master
+      - name: repo_commit_id
+#        value: HEAD
+      - name: container_image
+      - name: container_tag
+      artifacts:
+        - name: argo-source
+          path: /src
+          git:
+            repo: https://github.com/nxhop/portal_backend.git 
+            revision: "{{inputs.parameters.repo_ref}}#{{inputs.parameters.repo_commit_id}}"
+            usernameSecret:
+              name: github-access 
+              key: user
+            passwordSecret:
+              name: github-access 
+              key: token
+    script:
+      image: gcr.io/kaniko-project/executor:debug
+      command: [ sh ]
+      source: |
+        echo "GIT_USERNAME:$GIT_USERNAME GIT_PASSWORD:$GIT_PASSWORD"
+        echo "INPUT:{{inputs.parameters.repo_url}}#{{inputs.parameters.repo_ref}}#{{inputs.parameters.repo_commit_id}}"
+        /kaniko/executor --context=/src --dockerfile="Dockerfile" --destination={{inputs.parameters.container_image}}:{{inputs.parameters.container_tag}}
+      workingDir: /src
+      volumeMounts:
+        - name: regcred
+          mountPath: /kaniko/.docker/
+#        - name: github-access
+#          mountPath: /kaniko/.github/
+      env:
+        - name: GIT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: github-access
+              key: user 
+        - name: GIT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: github-access
+              key: token
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: ClusterWorkflowTemplate
+metadata:
+  name: promote
+spec:
+  serviceAccountName: workflow
+  templates:
+  - name: promote
+    inputs:
+      parameters:
+      - name: environment
+      - name: repo_owner
+      - name: repo_name
+      - name: image_owner
+      - name: image_name
+      - name: tag
+    script:
+      image: k8s.gcr.io/kustomize/kustomize:v4.5.7 
+      command: [sh]
+      source: |
+        set -e
+        git clone https://$(cat /.github/token)@github.com/{{inputs.parameters.repo_owner}}/{{inputs.parameters.repo_name}}
+        cd {{inputs.parameters.repo_name}}
+        sleep 2
+        git config user.name "$(cat /.github/user)"
+        git config user.email "$(cat /.github/email)"
+        cd k8s/portal-real/overlays/{{inputs.parameters.environment}}
+        kustomize edit set image "nxhop/"{{inputs.parameters.image_name}}"=nxhop/"{{inputs.parameters.image_name}}:{{inputs.parameters.tag}}
+        git add kustomization.yaml
+        git commit -m "{{inputs.parameters.image_owner}}/{{inputs.parameters.image_name}}={{inputs.parameters.image_owner}}/{{inputs.parameters.image_name}}:{{inputs.parameters.tag}}"
+        git push
+      volumeMounts:
+      - name: github-access
+        mountPath: /.github/

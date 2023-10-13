@@ -1,0 +1,99 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: frontend-prod-ingress 
+  annotations:
+    cert-manager.io/issuer: "letsencrypt-front-prod"
+    acme.cert-manager.io/http01-edit-in-place: "true"
+    cert-manager.io/issue-temporary-certificate: "true"
+    nginx.org/server-snippets: |
+         location /.well-known/acme-challenge/O-MwKtW_9eslayzaqOzf6Gz4QHcFTExnCpAYBCY3vLE {
+           return 200 'O-MwKtW_9eslayzaqOzf6Gz4QHcFTExnCpAYBCY3vLE.ZYOfyMkaEfRM8dVPKydK7k9d-m_siLUjPhWsuOXgrcM';
+         }
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - pink.nexthop.com.au 
+    secretName: front2
+  rules:
+  - host: pink.nexthop.com.au 
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: backend-prod-ingress 
+  annotations:
+    cert-manager.io/issuer: "letsencrypt-back-prod"
+    acme.cert-manager.io/http01-edit-in-place: "true"
+    cert-manager.io/issue-temporary-certificate: "true"
+    nginx.org/server-snippets: |
+         location /.well-known/acme-challenge/B4_ejjLgNtSLfMkqRk8MPCINZL6YsJl3rD6-_RpzrQs {
+           return 200 'B4_ejjLgNtSLfMkqRk8MPCINZL6YsJl3rD6-_RpzrQs.tt17Ea4wF4ZD__Rr_sJgtusu8Qo5TACjXNbABdIxkcw';
+         }
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - api.pink.nexthop.com.au 
+    secretName: back2
+  rules:
+  - host: api.pink.nexthop.com.au 
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: backend
+            port:
+              number: 8002
+---
+apiVersion: networking.k8s.io/v1 
+kind: Ingress 
+metadata:
+  name: frontend-ingress-preview
+  annotations:
+    kubernetes.io/ingress.class: nginx 
+    kubernetes.io/ingress.provider: nginx
+spec:
+  rules:
+  - host: preview-pink.nexthop.com.au 
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-preview
+            port:
+              number: 8080
+---
+apiVersion: networking.k8s.io/v1 
+kind: Ingress 
+metadata:
+  name: backend-ingress-prevew
+  annotations:
+    kubernetes.io/ingress.class: nginx 
+    kubernetes.io/ingress.provider: nginx
+spec:
+  rules:
+  - host: preview-api.pink.nexthop.com.au
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: backend-preview
+            port:
+              number: 8002

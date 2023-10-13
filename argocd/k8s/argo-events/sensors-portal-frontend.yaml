@@ -1,0 +1,148 @@
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: sensor-front 
+spec:
+  template:
+    serviceAccountName: events-sa-ops 
+  dependencies:
+  - name: github
+    eventSourceName: evsource-front 
+    eventName: portal_frontend_vue3
+    filtersLogicalOperator: "and"
+    filters:
+      data:
+        - path: headers.X-Github-Event
+          type: string
+          value:
+            - push
+        - path: body.ref
+          type: string
+          value:
+            - "refs/heads/test"
+  triggers:
+  - template:
+      name: trigger
+      argoWorkflow:
+        group: argoproj.io
+        version: v1alpha1
+        resource: workflows
+        operation: submit
+        source:
+          resource:
+            apiVersion: argoproj.io/v1alpha1
+            kind: Workflow
+            metadata:
+              generateName: nxhop-front-wf-
+              namespace: argo-events
+            spec:
+              entrypoint: build
+              serviceAccountName: events-sa-ops
+              volumes:
+              - name: regcred
+                secret:
+                  secretName: regcred
+                  items:
+                    - key: .dockerconfigjson
+                      path: config.json
+              - name: github-access
+                secret:
+                  secretName: github-access
+                  items:
+                    - key: token
+                      path: token
+                    - key: user
+                      path: user
+                    - key: email
+                      path: email
+              templates:
+              - name: build
+                dag:
+                  tasks:
+                  - name: build
+                    templateRef:
+                      name: container-image
+                      template: build-kaniko-git
+                    arguments:
+                      parameters:
+                      - name: repo_url
+                        value: ""
+                      - name: repo_ref
+                        value: ""
+                      - name: repo_commit_id
+                        value: ""
+                      - name: container_image
+                        value: nxhop/
+                      - name: container_tag
+                        value: ""
+                  - name: promote-staging
+                    templateRef:
+                      name: promote
+                      template: promote
+                    arguments:
+                      parameters:
+                      - name: environment
+                        value: test 
+                      - name: repo_owner
+                        value: nxhop
+                      - name: repo_name
+                        value: portal_aws_infrustructure 
+                      - name: image_owner
+                        value: nxhop
+                      - name: image_name
+                        value: ""
+                      - name: tag
+                        value: ""
+                    dependencies:
+                    - build
+                  - name: test-functional
+                    template: test
+                    dependencies:
+                    - promote-staging
+                  - name: test-integration
+                    template: test
+                    dependencies:
+                    - promote-staging
+              - name: test
+                script:
+                  image: alpine
+                  command: [sh]
+                  source: |
+                    echo This is a testing simulation...
+                    sleep 5
+                  volumeMounts:
+                  - name: github-access
+                    mountPath: /.github/
+        parameters:
+        - src:
+            dependencyName: github
+            dataKey: body.repository.git_url
+          dest: spec.templates.0.dag.tasks.0.arguments.parameters.0.value
+        - src:
+            dependencyName: github
+            dataKey: body.ref
+          dest: spec.templates.0.dag.tasks.0.arguments.parameters.1.value
+        - src:
+            dependencyName: github
+            dataKey: body.after
+          dest: spec.templates.0.dag.tasks.0.arguments.parameters.2.value
+        - src:
+            dependencyName: github
+            dataKey: body.repository.name
+          dest: spec.templates.0.dag.tasks.0.arguments.parameters.3.value
+          operation: append
+        - src:
+            dependencyName: github
+            dataKey: body.after
+          dest: spec.templates.0.dag.tasks.0.arguments.parameters.4.value
+        - src:
+            dependencyName: github
+            dataKey: body.repository.name
+          dest: spec.templates.0.dag.tasks.1.arguments.parameters.4.value
+        - src:
+            dependencyName: github
+            dataKey: body.after
+          dest: spec.templates.0.dag.tasks.1.arguments.parameters.5.value
+

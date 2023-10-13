@@ -1,0 +1,41 @@
+# An example of ClusterConfig object using an existing VPC:
+--- 
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: test-cluster
+  region: eu-central-1
+  tags:
+    karpenter.sh/discovery: cluster-with-karpenter
+
+iam:
+  withOIDC: true
+
+karpenter:
+  version: 'v0.31.0' # Exact version must be provided
+  createServiceAccount: true # default is false
+  withSpotInterruptionQueue: true # adds all required policies and rules for supporting Spot Interruption Queue, default is false
+
+vpc:
+  id: "vpc-0667971cce819adfa"  # (optional, must match VPC ID used for each subnet below)
+  cidr: "172.18.0.0/16"       # (optional, must match CIDR used by the given VPC)
+  subnets:
+    # must provide 'private' and/or 'public' subnets by availability zone as shown
+    private:
+      eu-central-1a:
+        id: "subnet-0d7451a24e12cc257"
+        cidr: "172.18.0.0/20"  # (optional, must match CIDR used by the given subnet)  
+      eu-central-1b:
+        id: "subnet-09aa022c2b543e78b"
+        cidr: "172.18.16.0/20" # (optional, must match CIDR used by the given subnet
+      eu-central-1c:
+        id: "subnet-0a5c3c2123f6849b8"
+        cidr: "172.18.32.0/20"   # (optional, must match CIDR used by the given subnet)
+managedNodeGroups:
+  - name: ng-1
+    instanceType: m5.large 
+    minSize: 1
+    maxSize: 2
+    desiredCapacity: 1
+    privateNetworking: true # if only 'Private' subnets are given, this must be enabled

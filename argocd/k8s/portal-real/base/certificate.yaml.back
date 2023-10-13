@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: front-cert  #name of this object
+  namespace: prod #same namespace as 
+spec:
+  dnsNames:
+    - pink.nexthop.com.au
+  secretName: front-tls-cert 
+  issuerRef:
+    name: letsencrypt-front 
+    kind: Issuer
