@@ -9,7 +9,7 @@ spec:
   project: nxhop 
   source:
     path: k8s/calico
-    repoURL: https://github.com/nxhop/portal_aws_infrustructure 
+    repoURL: https://github.com/agud97/eks-karpenter 
     targetRevision: HEAD
   destination:
     namespace: calico-system
