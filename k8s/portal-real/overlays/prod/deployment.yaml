@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: inflate-prod
 spec:
-  replicas: 2 
+  replicas: 8 
   selector:
     matchLabels:
       app: prod-karpenter
@@ -18,4 +18,4 @@ spec:
       tolerations:
       - key: "CriticalAddonsOnly"
         operator: "Exists"
-        effect: "NoExecute"
+        effect: "NoSchedule"
